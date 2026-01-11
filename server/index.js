@@ -162,6 +162,81 @@ app.delete("/api/tasks/:id", requireAuth, (req, res) => {
   res.json({ ok: true, deleted: toDelete.length });
 });
 
+// ---------- WIKI ----------
+app.get("/api/wiki", requireAuth, (req, res) => {
+  const rows = db.prepare(`
+    SELECT id, title, created_at, updated_at
+    FROM wiki_pages
+    ORDER BY updated_at DESC
+  `).all();
+  res.json({ pages: rows });
+});
+
+app.get("/api/wiki/:id", requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const page = db.prepare("SELECT * FROM wiki_pages WHERE id = ?").get(id);
+  if (!page) return res.status(404).json({ error: "not_found" });
+  res.json({ page });
+});
+
+app.post("/api/wiki", requireAuth, (req, res) => {
+  const { title, content = "" } = req.body || {};
+  if (typeof title !== "string" || !title.trim()) {
+    return res.status(400).json({ error: "title_required" });
+  }
+  if (typeof content !== "string") {
+    return res.status(400).json({ error: "content_required" });
+  }
+
+  const now = Date.now();
+  const stmt = db.prepare(`
+    INSERT INTO wiki_pages (title, content, created_at, updated_at)
+    VALUES (@title, @content, @created_at, @updated_at)
+  `);
+  const info = stmt.run({
+    title: title.trim(),
+    content,
+    created_at: now,
+    updated_at: now
+  });
+
+  res.json({ ok: true, id: info.lastInsertRowid });
+});
+
+app.patch("/api/wiki/:id", requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const { title, content } = req.body || {};
+  const now = Date.now();
+
+  const existing = db.prepare("SELECT id FROM wiki_pages WHERE id = ?").get(id);
+  if (!existing) return res.status(404).json({ error: "not_found" });
+
+  const fields = [];
+  const params = { id, updated_at: now };
+
+  if (typeof title === "string") {
+    const trimmed = title.trim();
+    if (!trimmed) return res.status(400).json({ error: "title_required" });
+    fields.push("title = @title");
+    params.title = trimmed;
+  }
+  if (typeof content === "string") {
+    fields.push("content = @content");
+    params.content = content;
+  }
+  fields.push("updated_at = @updated_at");
+
+  db.prepare(`UPDATE wiki_pages SET ${fields.join(", ")} WHERE id = @id`).run(params);
+  res.json({ ok: true });
+});
+
+app.delete("/api/wiki/:id", requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const info = db.prepare("DELETE FROM wiki_pages WHERE id = ?").run(id);
+  if (!info.changes) return res.status(404).json({ error: "not_found" });
+  res.json({ ok: true });
+});
+
 // ---------- STATIC FRONTEND (prod) ----------
 const webDist = path.resolve("../web/dist");
 if (fs.existsSync(webDist)) {
