@@ -7,6 +7,7 @@ export default function Wiki() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [status, setStatus] = useState("");
+  const [showSource, setShowSource] = useState(true);
 
   async function loadList(selectId = activeId) {
     const res = await apiGet("/api/wiki");
@@ -111,6 +112,12 @@ export default function Wiki() {
             placeholder="Название страницы"
           />
           <div style={styles.toolbarActions}>
+            <button
+              style={styles.secondaryBtn}
+              onClick={() => setShowSource((prev) => !prev)}
+            >
+              {showSource ? "Скрыть разметку" : "Показать разметку"}
+            </button>
             <button style={styles.secondaryBtn} onClick={deletePage} disabled={!activeId}>
               Удалить
             </button>
@@ -119,13 +126,20 @@ export default function Wiki() {
             </button>
           </div>
         </div>
-        <div style={styles.contentRow}>
-          <textarea
-            style={styles.textarea}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Markdown контент..."
-          />
+        <div
+          style={{
+            ...styles.contentRow,
+            gridTemplateColumns: showSource ? "1fr 1fr" : "1fr"
+          }}
+        >
+          {showSource && (
+            <textarea
+              style={styles.textarea}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Markdown контент..."
+            />
+          )}
           <div style={styles.preview}>
             <div
               style={styles.previewContent}
