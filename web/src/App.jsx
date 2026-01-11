@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import { apiDelete, apiGet, apiPatch, apiPost } from "./api.js";
 import Login from "./components/Login.jsx";
 import TaskTree from "./components/TaskTree.jsx";
+import Wiki from "./components/Wiki.jsx";
 
 export default function App() {
   const [auth, setAuth] = useState(null); // null | true | false
   const [tree, setTree] = useState([]);
   const [newTitle, setNewTitle] = useState("");
+  const [tab, setTab] = useState("tasks");
 
   async function refresh() {
     const res = await apiGet("/api/tasks");
@@ -67,32 +69,52 @@ export default function App() {
     <div style={styles.page}>
       <div style={styles.header}>
         <div style={styles.brand}>Задачи</div>
+        <div style={styles.tabs}>
+          <button
+            style={{ ...styles.tab, ...(tab === "tasks" ? styles.tabActive : {}) }}
+            onClick={() => setTab("tasks")}
+          >
+            Список
+          </button>
+          <button
+            style={{ ...styles.tab, ...(tab === "wiki" ? styles.tabActive : {}) }}
+            onClick={() => setTab("wiki")}
+          >
+            Wiki
+          </button>
+        </div>
         <button style={styles.logout} onClick={logout}>Выйти</button>
       </div>
 
-      <form onSubmit={addRoot} style={styles.addRow}>
-        <input
-          value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-          placeholder="Новая задача…"
-          style={styles.input}
-        />
-        <button style={styles.addBtn} type="submit">Добавить</button>
-      </form>
+      {tab === "tasks" ? (
+        <>
+          <form onSubmit={addRoot} style={styles.addRow}>
+            <input
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Новая задача…"
+              style={styles.input}
+            />
+            <button style={styles.addBtn} type="submit">Добавить</button>
+          </form>
 
-      <div style={styles.panel}>
-        <TaskTree
-          tree={tree}
-          onToggleDone={onToggleDone}
-          onRename={onRename}
-          onAddChild={onAddChild}
-          onDelete={onDelete}
-        />
-      </div>
+          <div style={styles.panel}>
+            <TaskTree
+              tree={tree}
+              onToggleDone={onToggleDone}
+              onRename={onRename}
+              onAddChild={onAddChild}
+              onDelete={onDelete}
+            />
+          </div>
 
-      <div style={styles.footer}>
-        Подсказка: двойной клик по задаче — переименование.
-      </div>
+          <div style={styles.footer}>
+            Подсказка: двойной клик по задаче — переименование.
+          </div>
+        </>
+      ) : (
+        <Wiki />
+      )}
     </div>
   );
 }
@@ -111,6 +133,19 @@ const styles = {
     marginBottom: 12
   },
   brand: { fontSize: 20, fontWeight: 600 },
+  tabs: { display: "flex", gap: 8 },
+  tab: {
+    border: "1px solid #ddd",
+    background: "white",
+    borderRadius: 999,
+    padding: "6px 12px",
+    cursor: "pointer"
+  },
+  tabActive: {
+    borderColor: "#111",
+    background: "#111",
+    color: "white"
+  },
   logout: {
     border: "1px solid #e5e5e5",
     background: "white",

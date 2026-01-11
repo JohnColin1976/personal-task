@@ -21,6 +21,16 @@ export function initDb(dbPath) {
     );
 
     CREATE INDEX IF NOT EXISTS idx_tasks_parent ON tasks(parent_id);
+
+    CREATE TABLE IF NOT EXISTS wiki_pages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_wiki_pages_updated ON wiki_pages(updated_at);
   `);
 
   return db;
