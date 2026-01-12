@@ -33,7 +33,7 @@ export default function TaskNode({
     deadlineDirtyRef.current = false;
   }, [node.deadline]);
 
-  const commitAssignee = () => {
+  const commitAssignee = async () => {
     if (!onUpdateMeta) return;
     const normalized = assignee.trim();
     const current = (node.assignee ?? "");
@@ -42,10 +42,11 @@ export default function TaskNode({
       assigneeDirtyRef.current = false;
       return;
     }
-    onUpdateMeta(node.id, { assignee: normalized || null });
+    setAssigneeStatus("saving");
+    await onUpdateMeta(node.id, { assignee: normalized || null });
   };
 
-  const commitDeadline = () => {
+  const commitDeadline = async () => {
     if (!onUpdateMeta) return;
     const normalized = deadline.trim();
     const current = (node.deadline ?? "");
@@ -54,13 +55,16 @@ export default function TaskNode({
       deadlineDirtyRef.current = false;
       return;
     }
-    onUpdateMeta(node.id, { deadline: normalized || null });
+    setDeadlineStatus("saving");
+    await onUpdateMeta(node.id, { deadline: normalized || null });
   };
 
   const saveButtonStyle = (status) => ({
     ...styles.metaSaveButton,
     background:
-      status === "dirty" ? "#ffd65c" : status === "saved" ? "#b7f7b0" : "white"
+      status === "dirty" ? "#ffd65c" : status === "saved" ? "#b7f7b0" : "white",
+    cursor: status === "dirty" ? "pointer" : "not-allowed",
+    opacity: status === "dirty" ? 1 : 0.7
   });
 
   return (
@@ -128,7 +132,12 @@ export default function TaskNode({
           placeholder="Исполнитель"
           style={styles.metaInput}
         />
-        <button type="button" onClick={commitAssignee} style={saveButtonStyle(assigneeStatus)}>
+        <button
+          type="button"
+          onClick={commitAssignee}
+          style={saveButtonStyle(assigneeStatus)}
+          disabled={assigneeStatus !== "dirty"}
+        >
           Сохранить
         </button>
         <input
@@ -142,7 +151,12 @@ export default function TaskNode({
           onBlur={commitDeadline}
           style={styles.metaInput}
         />
-        <button type="button" onClick={commitDeadline} style={saveButtonStyle(deadlineStatus)}>
+        <button
+          type="button"
+          onClick={commitDeadline}
+          style={saveButtonStyle(deadlineStatus)}
+          disabled={deadlineStatus !== "dirty"}
+        >
           Сохранить
         </button>
       </div>
