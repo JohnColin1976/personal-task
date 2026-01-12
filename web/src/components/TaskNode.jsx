@@ -7,7 +7,8 @@ export default function TaskNode({
   onRename,
   onAddChild,
   onDelete,
-  onUpdateMeta
+  onUpdateMeta,
+  onOpenGantt
 }) {
   const [open, setOpen] = useState(true);
   const [edit, setEdit] = useState(false);
@@ -90,6 +91,16 @@ export default function TaskNode({
           checked={!!node.done}
           onChange={(e) => onToggleDone(node.id, e.target.checked)}
         />
+
+        {level === 0 ? (
+          <button
+            style={styles.ganttBtn}
+            onClick={() => onOpenGantt?.(node)}
+            title="Открыть диаграмму Ганта"
+          >
+            G
+          </button>
+        ) : null}
 
         {edit ? (
           <form
@@ -179,6 +190,7 @@ export default function TaskNode({
               onAddChild={onAddChild}
               onDelete={onDelete}
               onUpdateMeta={onUpdateMeta}
+              onOpenGantt={onOpenGantt}
             />
           ))}
         </div>
@@ -237,5 +249,15 @@ const styles = {
     border: "1px solid #e5e5e5",
     background: "white",
     cursor: "pointer"
+  },
+  ganttBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 10,
+    border: "1px solid #4f7cff",
+    background: "#f3f6ff",
+    cursor: "pointer",
+    fontWeight: 600,
+    color: "#2b3f7c"
   }
 };
