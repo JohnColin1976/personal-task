@@ -14,6 +14,8 @@ export function initDb(dbPath) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       parent_id INTEGER NULL,
       title TEXT NOT NULL,
+      assignee TEXT NULL,
+      deadline TEXT NULL,
       done INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL,
@@ -32,6 +34,16 @@ export function initDb(dbPath) {
 
     CREATE INDEX IF NOT EXISTS idx_wiki_pages_updated ON wiki_pages(updated_at);
   `);
+
+  const taskColumns = new Set(
+    db.prepare("PRAGMA table_info(tasks)").all().map((col) => col.name)
+  );
+  if (!taskColumns.has("assignee")) {
+    db.prepare("ALTER TABLE tasks ADD COLUMN assignee TEXT NULL").run();
+  }
+  if (!taskColumns.has("deadline")) {
+    db.prepare("ALTER TABLE tasks ADD COLUMN deadline TEXT NULL").run();
+  }
 
   return db;
 }

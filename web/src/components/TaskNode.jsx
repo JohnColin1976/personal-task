@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function TaskNode({
   node,
@@ -6,13 +6,40 @@ export default function TaskNode({
   onToggleDone,
   onRename,
   onAddChild,
-  onDelete
+  onDelete,
+  onUpdateMeta
 }) {
   const [open, setOpen] = useState(true);
   const [edit, setEdit] = useState(false);
   const [title, setTitle] = useState(node.title);
+  const [assignee, setAssignee] = useState(node.assignee ?? "");
+  const [deadline, setDeadline] = useState(node.deadline ?? "");
 
   const hasKids = node.children?.length > 0;
+
+  useEffect(() => {
+    setAssignee(node.assignee ?? "");
+  }, [node.assignee]);
+
+  useEffect(() => {
+    setDeadline(node.deadline ?? "");
+  }, [node.deadline]);
+
+  const commitAssignee = () => {
+    if (!onUpdateMeta) return;
+    const normalized = assignee.trim();
+    const current = (node.assignee ?? "");
+    if (normalized === current) return;
+    onUpdateMeta(node.id, { assignee: normalized || null });
+  };
+
+  const commitDeadline = () => {
+    if (!onUpdateMeta) return;
+    const normalized = deadline.trim();
+    const current = (node.deadline ?? "");
+    if (normalized === current) return;
+    onUpdateMeta(node.id, { deadline: normalized || null });
+  };
 
   return (
     <div style={{ marginLeft: level * 14, padding: "4px 0" }}>
@@ -67,6 +94,23 @@ export default function TaskNode({
         <button style={styles.iconBtn} onClick={() => onDelete(node.id)} title="Удалить (поддерево)">✕</button>
       </div>
 
+      <div style={styles.metaRow}>
+        <input
+          value={assignee}
+          onChange={(e) => setAssignee(e.target.value)}
+          onBlur={commitAssignee}
+          placeholder="Исполнитель"
+          style={styles.metaInput}
+        />
+        <input
+          type="date"
+          value={deadline}
+          onChange={(e) => setDeadline(e.target.value)}
+          onBlur={commitDeadline}
+          style={styles.metaInput}
+        />
+      </div>
+
       {open && hasKids ? (
         <div>
           {node.children.map((c) => (
@@ -78,6 +122,7 @@ export default function TaskNode({
               onRename={onRename}
               onAddChild={onAddChild}
               onDelete={onDelete}
+              onUpdateMeta={onUpdateMeta}
             />
           ))}
         </div>
@@ -88,6 +133,19 @@ export default function TaskNode({
 
 const styles = {
   row: { display: "flex", alignItems: "center", gap: 8 },
+  metaRow: {
+    display: "flex",
+    gap: 8,
+    paddingLeft: 30,
+    marginTop: 6
+  },
+  metaInput: {
+    borderRadius: 10,
+    border: "1px solid #e5e5e5",
+    padding: "6px 8px",
+    fontSize: 12,
+    minWidth: 140
+  },
   disclosure: {
     width: 22,
     height: 22,
