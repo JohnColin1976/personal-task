@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 export default function TaskNode({
   node,
@@ -14,22 +14,34 @@ export default function TaskNode({
   const [title, setTitle] = useState(node.title);
   const [assignee, setAssignee] = useState(node.assignee ?? "");
   const [deadline, setDeadline] = useState(node.deadline ?? "");
+  const [assigneeStatus, setAssigneeStatus] = useState("idle");
+  const [deadlineStatus, setDeadlineStatus] = useState("idle");
+  const assigneeDirtyRef = useRef(false);
+  const deadlineDirtyRef = useRef(false);
 
   const hasKids = node.children?.length > 0;
 
   useEffect(() => {
     setAssignee(node.assignee ?? "");
+    setAssigneeStatus(assigneeDirtyRef.current ? "saved" : "idle");
+    assigneeDirtyRef.current = false;
   }, [node.assignee]);
 
   useEffect(() => {
     setDeadline(node.deadline ?? "");
+    setDeadlineStatus(deadlineDirtyRef.current ? "saved" : "idle");
+    deadlineDirtyRef.current = false;
   }, [node.deadline]);
 
   const commitAssignee = () => {
     if (!onUpdateMeta) return;
     const normalized = assignee.trim();
     const current = (node.assignee ?? "");
-    if (normalized === current) return;
+    if (normalized === current) {
+      setAssigneeStatus("idle");
+      assigneeDirtyRef.current = false;
+      return;
+    }
     onUpdateMeta(node.id, { assignee: normalized || null });
   };
 
@@ -37,9 +49,19 @@ export default function TaskNode({
     if (!onUpdateMeta) return;
     const normalized = deadline.trim();
     const current = (node.deadline ?? "");
-    if (normalized === current) return;
+    if (normalized === current) {
+      setDeadlineStatus("idle");
+      deadlineDirtyRef.current = false;
+      return;
+    }
     onUpdateMeta(node.id, { deadline: normalized || null });
   };
+
+  const saveButtonStyle = (status) => ({
+    ...styles.metaSaveButton,
+    background:
+      status === "dirty" ? "#ffd65c" : status === "saved" ? "#b7f7b0" : "white"
+  });
 
   return (
     <div style={{ marginLeft: level * 14, padding: "4px 0" }}>
@@ -97,18 +119,32 @@ export default function TaskNode({
       <div style={styles.metaRow}>
         <input
           value={assignee}
-          onChange={(e) => setAssignee(e.target.value)}
+          onChange={(e) => {
+            setAssignee(e.target.value);
+            setAssigneeStatus("dirty");
+            assigneeDirtyRef.current = true;
+          }}
           onBlur={commitAssignee}
           placeholder="Исполнитель"
           style={styles.metaInput}
         />
+        <button type="button" onClick={commitAssignee} style={saveButtonStyle(assigneeStatus)}>
+          Сохранить
+        </button>
         <input
           type="date"
           value={deadline}
-          onChange={(e) => setDeadline(e.target.value)}
+          onChange={(e) => {
+            setDeadline(e.target.value);
+            setDeadlineStatus("dirty");
+            deadlineDirtyRef.current = true;
+          }}
           onBlur={commitDeadline}
           style={styles.metaInput}
         />
+        <button type="button" onClick={commitDeadline} style={saveButtonStyle(deadlineStatus)}>
+          Сохранить
+        </button>
       </div>
 
       {open && hasKids ? (
@@ -145,6 +181,13 @@ const styles = {
     padding: "6px 8px",
     fontSize: 12,
     minWidth: 140
+  },
+  metaSaveButton: {
+    borderRadius: 10,
+    border: "1px solid #e5e5e5",
+    padding: "6px 10px",
+    fontSize: 12,
+    cursor: "pointer"
   },
   disclosure: {
     width: 22,
