@@ -112,8 +112,8 @@ export default function App() {
 
     const formatDate = (ts) => new Date(ts).toLocaleDateString("ru-RU");
 
-    const ganttWindow = window.open("", "_blank", "noopener,noreferrer");
-    if (!ganttWindow) return;
+    const ganttWindow = window.open("", "_blank");
+    if (!ganttWindow || !ganttWindow.document) return;
 
     const rowsHtml = tasks
       .map((task) => {
