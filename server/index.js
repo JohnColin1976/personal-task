@@ -88,18 +88,22 @@ app.get("/api/tasks", requireAuth, (req, res) => {
 });
 
 app.post("/api/tasks", requireAuth, (req, res) => {
-  const { title, parent_id = null } = req.body || {};
+  const { title, parent_id = null, assignee, deadline } = req.body || {};
   if (typeof title !== "string" || !title.trim()) return res.status(400).json({ error: "title_required" });
 
   const now = Date.now();
+  const assigneeValue = typeof assignee === "string" && assignee.trim() ? assignee.trim() : null;
+  const deadlineValue = typeof deadline === "string" && deadline.trim() ? deadline.trim() : null;
   const stmt = db.prepare(`
-    INSERT INTO tasks (parent_id, title, done, created_at, updated_at)
-    VALUES (@parent_id, @title, 0, @created_at, @updated_at)
+    INSERT INTO tasks (parent_id, title, assignee, deadline, done, created_at, updated_at)
+    VALUES (@parent_id, @title, @assignee, @deadline, 0, @created_at, @updated_at)
   `);
 
   const info = stmt.run({
     parent_id: parent_id === null ? null : Number(parent_id),
     title: title.trim(),
+    assignee: assigneeValue,
+    deadline: deadlineValue,
     created_at: now,
     updated_at: now
   });
@@ -121,6 +125,22 @@ app.patch("/api/tasks/:id", requireAuth, (req, res) => {
   if (typeof title === "string") {
     fields.push("title = @title");
     params.title = title.trim();
+  }
+  if (Object.prototype.hasOwnProperty.call(req.body || {}, "assignee")) {
+    const assigneeValue =
+      typeof req.body.assignee === "string" && req.body.assignee.trim()
+        ? req.body.assignee.trim()
+        : null;
+    fields.push("assignee = @assignee");
+    params.assignee = assigneeValue;
+  }
+  if (Object.prototype.hasOwnProperty.call(req.body || {}, "deadline")) {
+    const deadlineValue =
+      typeof req.body.deadline === "string" && req.body.deadline.trim()
+        ? req.body.deadline.trim()
+        : null;
+    fields.push("deadline = @deadline");
+    params.deadline = deadlineValue;
   }
   if (typeof done === "boolean") {
     fields.push("done = @done");

@@ -9,6 +9,8 @@ export default function App() {
   const [auth, setAuth] = useState(null); // null | true | false
   const [tree, setTree] = useState([]);
   const [newTitle, setNewTitle] = useState("");
+  const [newAssignee, setNewAssignee] = useState("");
+  const [newDeadline, setNewDeadline] = useState("");
   const [tab, setTab] = useState("tasks");
 
   async function refresh() {
@@ -31,8 +33,15 @@ export default function App() {
     e.preventDefault();
     const title = newTitle.trim();
     if (!title) return;
-    await apiPost("/api/tasks", { title, parent_id: null });
+    await apiPost("/api/tasks", {
+      title,
+      parent_id: null,
+      assignee: newAssignee.trim() || null,
+      deadline: newDeadline || null
+    });
     setNewTitle("");
+    setNewAssignee("");
+    setNewDeadline("");
     await refresh();
   }
 
@@ -58,6 +67,11 @@ export default function App() {
   async function onDelete(id) {
     if (!confirm("Удалить задачу и все подзадачи?")) return;
     await apiDelete(`/api/tasks/${id}`);
+    await refresh();
+  }
+
+  async function onUpdateMeta(id, updates) {
+    await apiPatch(`/api/tasks/${id}`, updates);
     await refresh();
   }
 
@@ -96,6 +110,18 @@ export default function App() {
               placeholder="Новая задача…"
               className="input"
             />
+            <input
+              value={newAssignee}
+              onChange={(e) => setNewAssignee(e.target.value)}
+              placeholder="Исполнитель"
+              className="input inputSmall"
+            />
+            <input
+              type="date"
+              value={newDeadline}
+              onChange={(e) => setNewDeadline(e.target.value)}
+              className="input inputSmall"
+            />
             <button className="addBtn" type="submit">Добавить</button>
           </form>
 
@@ -106,6 +132,7 @@ export default function App() {
               onRename={onRename}
               onAddChild={onAddChild}
               onDelete={onDelete}
+              onUpdateMeta={onUpdateMeta}
             />
           </div>
 
