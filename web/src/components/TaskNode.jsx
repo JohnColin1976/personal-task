@@ -3,6 +3,8 @@ import React, { useEffect, useRef, useState } from "react";
 export default function TaskNode({
   node,
   level,
+  openById,
+  onToggleOpen,
   onToggleDone,
   onRename,
   onAddChild,
@@ -10,7 +12,6 @@ export default function TaskNode({
   onUpdateMeta,
   onOpenGantt
 }) {
-  const [open, setOpen] = useState(true);
   const [edit, setEdit] = useState(false);
   const [title, setTitle] = useState(node.title);
   const [assignee, setAssignee] = useState(node.assignee ?? "");
@@ -21,6 +22,8 @@ export default function TaskNode({
   const deadlineDirtyRef = useRef(false);
 
   const hasKids = node.children?.length > 0;
+  const storedOpen = openById?.[node.id];
+  const open = typeof storedOpen === "boolean" ? storedOpen : true;
 
   useEffect(() => {
     setAssignee(node.assignee ?? "");
@@ -79,7 +82,7 @@ export default function TaskNode({
       <div style={styles.row}>
         <button
           style={styles.disclosure}
-          onClick={() => setOpen(!open)}
+          onClick={() => onToggleOpen?.(node.id, !open)}
           disabled={!hasKids}
           title={hasKids ? (open ? "Свернуть" : "Развернуть") : ""}
         >
@@ -185,6 +188,8 @@ export default function TaskNode({
               key={c.id}
               node={c}
               level={level + 1}
+              openById={openById}
+              onToggleOpen={onToggleOpen}
               onToggleDone={onToggleDone}
               onRename={onRename}
               onAddChild={onAddChild}
