@@ -82,16 +82,6 @@ export default function TaskNode({
   return (
     <div style={{ marginLeft: level * 14, padding: "4px 0" }}>
       <div style={styles.row}>
-        {level === 0 ? (
-          <button
-            type="button"
-            style={styles.metaToggleBtn}
-            onClick={onToggleMeta}
-            title={showMeta ? "Скрыть исполнителей и сроки" : "Показать исполнителей и сроки"}
-          >
-            U
-          </button>
-        ) : null}
         <button
           style={styles.disclosure}
           onClick={() => onToggleOpen?.(node.id, !open)}
@@ -114,6 +104,16 @@ export default function TaskNode({
             title="Открыть диаграмму Ганта"
           >
             G
+          </button>
+        ) : null}
+        {level === 0 ? (
+          <button
+            type="button"
+            style={styles.metaToggleBtn}
+            onClick={onToggleMeta}
+            title={showMeta ? "Скрыть исполнителей и сроки" : "Показать исполнителей и сроки"}
+          >
+            U
           </button>
         ) : null}
 
