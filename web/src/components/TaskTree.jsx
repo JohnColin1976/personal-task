@@ -3,6 +3,7 @@ import TaskNode from "./TaskNode.jsx";
 
 export default function TaskTree({ tree, ...handlers }) {
   const [openById, setOpenById] = useState({});
+  const [showMeta, setShowMeta] = useState(true);
 
   useEffect(() => {
     const saved = localStorage.getItem("taskTreeOpenState");
@@ -25,6 +26,10 @@ export default function TaskTree({ tree, ...handlers }) {
     setOpenById((prev) => ({ ...prev, [id]: nextOpen }));
   };
 
+  const handleToggleMeta = () => {
+    setShowMeta((prev) => !prev);
+  };
+
   if (!tree?.length) {
     return <div style={{ color: "#666", padding: 12 }}>Пока нет задач. Добавь первую.</div>;
   }
@@ -38,6 +43,8 @@ export default function TaskTree({ tree, ...handlers }) {
           level={0}
           openById={openById}
           onToggleOpen={handleToggleOpen}
+          showMeta={showMeta}
+          onToggleMeta={handleToggleMeta}
           {...handlers}
         />
       ))}

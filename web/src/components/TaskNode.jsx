@@ -4,6 +4,8 @@ export default function TaskNode({
   node,
   level,
   openById,
+  showMeta,
+  onToggleMeta,
   onToggleOpen,
   onToggleDone,
   onRename,
@@ -80,6 +82,16 @@ export default function TaskNode({
   return (
     <div style={{ marginLeft: level * 14, padding: "4px 0" }}>
       <div style={styles.row}>
+        {level === 0 ? (
+          <button
+            type="button"
+            style={styles.metaToggleBtn}
+            onClick={onToggleMeta}
+            title={showMeta ? "Скрыть исполнителей и сроки" : "Показать исполнителей и сроки"}
+          >
+            U
+          </button>
+        ) : null}
         <button
           style={styles.disclosure}
           onClick={() => onToggleOpen?.(node.id, !open)}
@@ -140,46 +152,48 @@ export default function TaskNode({
         <button style={styles.iconBtn} onClick={() => onDelete(node.id)} title="Удалить (поддерево)">✕</button>
       </div>
 
-      <div style={styles.metaRow}>
-        <input
-          value={assignee}
-          onChange={(e) => {
-            setAssignee(e.target.value);
-            setAssigneeStatus("dirty");
-            assigneeDirtyRef.current = true;
-          }}
-          onBlur={commitAssignee}
-          placeholder="Исполнитель"
-          style={styles.metaInput}
-        />
-        <button
-          type="button"
-          onClick={commitAssignee}
-          style={saveButtonStyle(assigneeStatus)}
-          disabled={assigneeStatus !== "dirty"}
-        >
-          {saveButtonLabel(assigneeStatus)}
-        </button>
-        <input
-          type="date"
-          value={deadline}
-          onChange={(e) => {
-            setDeadline(e.target.value);
-            setDeadlineStatus("dirty");
-            deadlineDirtyRef.current = true;
-          }}
-          onBlur={commitDeadline}
-          style={styles.metaInput}
-        />
-        <button
-          type="button"
-          onClick={commitDeadline}
-          style={saveButtonStyle(deadlineStatus)}
-          disabled={deadlineStatus !== "dirty"}
-        >
-          {saveButtonLabel(deadlineStatus)}
-        </button>
-      </div>
+      {showMeta ? (
+        <div style={styles.metaRow}>
+          <input
+            value={assignee}
+            onChange={(e) => {
+              setAssignee(e.target.value);
+              setAssigneeStatus("dirty");
+              assigneeDirtyRef.current = true;
+            }}
+            onBlur={commitAssignee}
+            placeholder="Исполнитель"
+            style={styles.metaInput}
+          />
+          <button
+            type="button"
+            onClick={commitAssignee}
+            style={saveButtonStyle(assigneeStatus)}
+            disabled={assigneeStatus !== "dirty"}
+          >
+            {saveButtonLabel(assigneeStatus)}
+          </button>
+          <input
+            type="date"
+            value={deadline}
+            onChange={(e) => {
+              setDeadline(e.target.value);
+              setDeadlineStatus("dirty");
+              deadlineDirtyRef.current = true;
+            }}
+            onBlur={commitDeadline}
+            style={styles.metaInput}
+          />
+          <button
+            type="button"
+            onClick={commitDeadline}
+            style={saveButtonStyle(deadlineStatus)}
+            disabled={deadlineStatus !== "dirty"}
+          >
+            {saveButtonLabel(deadlineStatus)}
+          </button>
+        </div>
+      ) : null}
 
       {open && hasKids ? (
         <div>
@@ -189,6 +203,8 @@ export default function TaskNode({
               node={c}
               level={level + 1}
               openById={openById}
+              showMeta={showMeta}
+              onToggleMeta={onToggleMeta}
               onToggleOpen={onToggleOpen}
               onToggleDone={onToggleDone}
               onRename={onRename}
@@ -254,6 +270,15 @@ const styles = {
     border: "1px solid #e5e5e5",
     background: "white",
     cursor: "pointer"
+  },
+  metaToggleBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 10,
+    border: "1px solid #e5e5e5",
+    background: "white",
+    cursor: "pointer",
+    fontWeight: 600
   },
   ganttBtn: {
     width: 28,
