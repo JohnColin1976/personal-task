@@ -67,6 +67,12 @@ export default function TaskNode({
     opacity: status === "dirty" ? 1 : 0.7
   });
 
+  const saveButtonLabel = (status) => {
+    if (status === "dirty") return "!";
+    if (status === "saved") return "✓";
+    return "";
+  };
+
   return (
     <div style={{ marginLeft: level * 14, padding: "4px 0" }}>
       <div style={styles.row}>
@@ -138,7 +144,7 @@ export default function TaskNode({
           style={saveButtonStyle(assigneeStatus)}
           disabled={assigneeStatus !== "dirty"}
         >
-          Сохранить
+          {saveButtonLabel(assigneeStatus)}
         </button>
         <input
           type="date"
@@ -157,7 +163,7 @@ export default function TaskNode({
           style={saveButtonStyle(deadlineStatus)}
           disabled={deadlineStatus !== "dirty"}
         >
-          Сохранить
+          {saveButtonLabel(deadlineStatus)}
         </button>
       </div>
 
