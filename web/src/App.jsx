@@ -15,6 +15,7 @@ export default function App() {
   const [newDeadline, setNewDeadline] = useState("");
   const [tab, setTab] = useState("tasks");
   const [selectedTaskId, setSelectedTaskId] = useState(null);
+  const [showCards, setShowCards] = useState(true);
 
   const isOperationalTree = (node) => {
     const firstWord = (node?.title || "").trim().split(/\s+/)[0] || "";
@@ -280,20 +281,24 @@ export default function App() {
               onDelete={onDelete}
               onUpdateMeta={onUpdateMeta}
               onOpenGantt={openGantt}
+              showCards={showCards}
+              onToggleCards={() => setShowCards((prev) => !prev)}
             />
           </div>
 
-          <div className="panel taskCardsPanel">
-            <div className="taskCardsHeader">
-              Карточки задач
-              <span className="taskCardsHint">Нажмите на событие в календаре, чтобы открыть карточку.</span>
+          {showCards ? (
+            <div className="panel taskCardsPanel">
+              <div className="taskCardsHeader">
+                Карточки задач
+                <span className="taskCardsHint">Нажмите на событие в календаре, чтобы открыть карточку.</span>
+              </div>
+              <TaskCards
+                tree={visibleTree}
+                selectedTaskId={selectedTaskId}
+                onUpdateMeta={onUpdateMeta}
+              />
             </div>
-            <TaskCards
-              tree={visibleTree}
-              selectedTaskId={selectedTaskId}
-              onUpdateMeta={onUpdateMeta}
-            />
-          </div>
+          ) : null}
 
           <div className="footer">
             Подсказка: двойной клик по задаче — переименование.

@@ -6,6 +6,8 @@ export default function TaskNode({
   openById,
   showMeta,
   onToggleMeta,
+  showCards,
+  onToggleCards,
   onToggleOpen,
   onToggleDone,
   onRename,
@@ -79,6 +81,20 @@ export default function TaskNode({
     return "";
   };
 
+  const statusCard = showCards ? (
+    <div style={styles.statusCard}>
+      <span>Состояние</span>
+      <span
+        style={{
+          ...styles.statusBadge,
+          ...(node.done ? styles.statusBadgeDone : {})
+        }}
+      >
+        {node.done ? "Готово" : "В работе"}
+      </span>
+    </div>
+  ) : null;
+
   return (
     <div style={{ marginLeft: level * 14, padding: "4px 0" }}>
       <div style={styles.row}>
@@ -114,6 +130,16 @@ export default function TaskNode({
             title={showMeta ? "Скрыть исполнителей и сроки" : "Показать исполнителей и сроки"}
           >
             U
+          </button>
+        ) : null}
+        {level === 0 ? (
+          <button
+            type="button"
+            style={styles.cardToggleBtn(showCards)}
+            onClick={onToggleCards}
+            title={showCards ? "Скрыть карточки задач" : "Показать карточки задач"}
+          >
+            C
           </button>
         ) : null}
 
@@ -153,47 +179,52 @@ export default function TaskNode({
       </div>
 
       {showMeta ? (
-        <div style={styles.metaRow}>
-          <input
-            value={assignee}
-            onChange={(e) => {
-              setAssignee(e.target.value);
-              setAssigneeStatus("dirty");
-              assigneeDirtyRef.current = true;
-            }}
-            onBlur={commitAssignee}
-            placeholder="Исполнитель"
-            style={styles.metaInput}
-          />
-          <button
-            type="button"
-            onClick={commitAssignee}
-            style={saveButtonStyle(assigneeStatus)}
-            disabled={assigneeStatus !== "dirty"}
-          >
-            {saveButtonLabel(assigneeStatus)}
-          </button>
-          <input
-            type="date"
-            value={deadline}
-            onChange={(e) => {
-              setDeadline(e.target.value);
-              setDeadlineStatus("dirty");
-              deadlineDirtyRef.current = true;
-            }}
-            onBlur={commitDeadline}
-            style={styles.metaInput}
-          />
-          <button
-            type="button"
-            onClick={commitDeadline}
-            style={saveButtonStyle(deadlineStatus)}
-            disabled={deadlineStatus !== "dirty"}
-          >
-            {saveButtonLabel(deadlineStatus)}
-          </button>
-        </div>
-      ) : null}
+        <>
+          <div style={styles.metaRow}>
+            <input
+              value={assignee}
+              onChange={(e) => {
+                setAssignee(e.target.value);
+                setAssigneeStatus("dirty");
+                assigneeDirtyRef.current = true;
+              }}
+              onBlur={commitAssignee}
+              placeholder="Исполнитель"
+              style={styles.metaInput}
+            />
+            <button
+              type="button"
+              onClick={commitAssignee}
+              style={saveButtonStyle(assigneeStatus)}
+              disabled={assigneeStatus !== "dirty"}
+            >
+              {saveButtonLabel(assigneeStatus)}
+            </button>
+            <input
+              type="date"
+              value={deadline}
+              onChange={(e) => {
+                setDeadline(e.target.value);
+                setDeadlineStatus("dirty");
+                deadlineDirtyRef.current = true;
+              }}
+              onBlur={commitDeadline}
+              style={styles.metaInput}
+            />
+            <button
+              type="button"
+              onClick={commitDeadline}
+              style={saveButtonStyle(deadlineStatus)}
+              disabled={deadlineStatus !== "dirty"}
+            >
+              {saveButtonLabel(deadlineStatus)}
+            </button>
+          </div>
+          {statusCard}
+        </>
+      ) : (
+        statusCard
+      )}
 
       {open && hasKids ? (
         <div>
@@ -205,6 +236,8 @@ export default function TaskNode({
               openById={openById}
               showMeta={showMeta}
               onToggleMeta={onToggleMeta}
+              showCards={showCards}
+              onToggleCards={onToggleCards}
               onToggleOpen={onToggleOpen}
               onToggleDone={onToggleDone}
               onRename={onRename}
@@ -279,6 +312,40 @@ const styles = {
     background: "white",
     cursor: "pointer",
     fontWeight: 600
+  },
+  cardToggleBtn: (active) => ({
+    width: 28,
+    height: 28,
+    borderRadius: 10,
+    border: `1px solid ${active ? "#4f7cff" : "#e5e5e5"}`,
+    background: active ? "#f3f6ff" : "white",
+    cursor: "pointer",
+    fontWeight: 600,
+    color: active ? "#2b3f7c" : "#111"
+  }),
+  statusCard: {
+    marginTop: 6,
+    padding: "8px 12px",
+    marginLeft: 30,
+    borderRadius: 12,
+    border: "1px solid #e5e5e5",
+    background: "white",
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    fontSize: 12,
+    color: "#444"
+  },
+  statusBadge: {
+    padding: "2px 8px",
+    borderRadius: 999,
+    background: "#f1f1f1",
+    fontWeight: 600,
+    color: "#444"
+  },
+  statusBadgeDone: {
+    background: "#daf5d9",
+    color: "#1f7a32"
   },
   ganttBtn: {
     width: 28,

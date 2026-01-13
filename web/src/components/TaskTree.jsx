@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import TaskNode from "./TaskNode.jsx";
 
-export default function TaskTree({ tree, ...handlers }) {
+export default function TaskTree({ tree, showCards, onToggleCards, ...handlers }) {
   const [openById, setOpenById] = useState({});
   const [showMeta, setShowMeta] = useState(true);
 
@@ -45,6 +45,8 @@ export default function TaskTree({ tree, ...handlers }) {
           onToggleOpen={handleToggleOpen}
           showMeta={showMeta}
           onToggleMeta={handleToggleMeta}
+          showCards={showCards}
+          onToggleCards={onToggleCards}
           {...handlers}
         />
       ))}
