@@ -88,15 +88,17 @@ app.get("/api/tasks", requireAuth, (req, res) => {
 });
 
 app.post("/api/tasks", requireAuth, (req, res) => {
-  const { title, parent_id = null, assignee, deadline } = req.body || {};
+  const { title, parent_id = null, assignee, deadline, description } = req.body || {};
   if (typeof title !== "string" || !title.trim()) return res.status(400).json({ error: "title_required" });
 
   const now = Date.now();
   const assigneeValue = typeof assignee === "string" && assignee.trim() ? assignee.trim() : null;
   const deadlineValue = typeof deadline === "string" && deadline.trim() ? deadline.trim() : null;
+  const descriptionValue =
+    typeof description === "string" && description.trim() ? description.trim() : null;
   const stmt = db.prepare(`
-    INSERT INTO tasks (parent_id, title, assignee, deadline, done, created_at, updated_at)
-    VALUES (@parent_id, @title, @assignee, @deadline, 0, @created_at, @updated_at)
+    INSERT INTO tasks (parent_id, title, assignee, deadline, description, done, created_at, updated_at)
+    VALUES (@parent_id, @title, @assignee, @deadline, @description, 0, @created_at, @updated_at)
   `);
 
   const info = stmt.run({
@@ -104,6 +106,7 @@ app.post("/api/tasks", requireAuth, (req, res) => {
     title: title.trim(),
     assignee: assigneeValue,
     deadline: deadlineValue,
+    description: descriptionValue,
     created_at: now,
     updated_at: now
   });
@@ -141,6 +144,14 @@ app.patch("/api/tasks/:id", requireAuth, (req, res) => {
         : null;
     fields.push("deadline = @deadline");
     params.deadline = deadlineValue;
+  }
+  if (Object.prototype.hasOwnProperty.call(req.body || {}, "description")) {
+    const descriptionValue =
+      typeof req.body.description === "string" && req.body.description.trim()
+        ? req.body.description.trim()
+        : null;
+    fields.push("description = @description");
+    params.description = descriptionValue;
   }
   if (typeof done === "boolean") {
     fields.push("done = @done");

@@ -16,6 +16,7 @@ export function initDb(dbPath) {
       title TEXT NOT NULL,
       assignee TEXT NULL,
       deadline TEXT NULL,
+      description TEXT NULL,
       done INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL,
@@ -43,6 +44,9 @@ export function initDb(dbPath) {
   }
   if (!taskColumns.has("deadline")) {
     db.prepare("ALTER TABLE tasks ADD COLUMN deadline TEXT NULL").run();
+  }
+  if (!taskColumns.has("description")) {
+    db.prepare("ALTER TABLE tasks ADD COLUMN description TEXT NULL").run();
   }
 
   return db;

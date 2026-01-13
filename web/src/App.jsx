@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { apiDelete, apiGet, apiPatch, apiPost } from "./api.js";
 import Login from "./components/Login.jsx";
 import TaskTree from "./components/TaskTree.jsx";
+import TaskCards from "./components/TaskCards.jsx";
 import Wiki from "./components/Wiki.jsx";
 import Calendar from "./components/Calendar.jsx";
 import "./App.css";
@@ -13,6 +14,7 @@ export default function App() {
   const [newAssignee, setNewAssignee] = useState("");
   const [newDeadline, setNewDeadline] = useState("");
   const [tab, setTab] = useState("tasks");
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
 
   const isOperationalTree = (node) => {
     const firstWord = (node?.title || "").trim().split(/\s+/)[0] || "";
@@ -24,6 +26,17 @@ export default function App() {
     if (tab === "tasks") return !isOperationalTree(node);
     return true;
   });
+
+  const findRootForTask = (nodes, id) => {
+    for (const node of nodes) {
+      if (node.id === id) return node;
+      if (node.children?.length) {
+        const found = findRootForTask(node.children, id);
+        if (found) return node;
+      }
+    }
+    return null;
+  };
 
   async function refresh() {
     const res = await apiGet("/api/tasks");
@@ -86,6 +99,16 @@ export default function App() {
     await apiPatch(`/api/tasks/${id}`, updates);
     await refresh();
   }
+
+  const handleSelectTask = (id) => {
+    const root = findRootForTask(tree, id);
+    if (root && isOperationalTree(root)) {
+      setTab("operational");
+    } else {
+      setTab("tasks");
+    }
+    setSelectedTaskId(id);
+  };
 
   function openGantt(node) {
     if (!node) return;
@@ -260,6 +283,18 @@ export default function App() {
             />
           </div>
 
+          <div className="panel taskCardsPanel">
+            <div className="taskCardsHeader">
+              Карточки задач
+              <span className="taskCardsHint">Нажмите на событие в календаре, чтобы открыть карточку.</span>
+            </div>
+            <TaskCards
+              tree={visibleTree}
+              selectedTaskId={selectedTaskId}
+              onUpdateMeta={onUpdateMeta}
+            />
+          </div>
+
           <div className="footer">
             Подсказка: двойной клик по задаче — переименование.
           </div>
@@ -267,7 +302,7 @@ export default function App() {
       ) : isWikiTab ? (
         <Wiki />
       ) : isCalendarTab ? (
-        <Calendar tree={tree} />
+        <Calendar tree={tree} onSelectTask={handleSelectTask} />
       ) : (
         <div className="panel">Выберите раздел в меню.</div>
       )}
