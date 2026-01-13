@@ -6,8 +6,8 @@ export default function TaskNode({
   openById,
   showMeta,
   onToggleMeta,
-  showCards,
-  onToggleCards,
+  cardVisibility,
+  onToggleCard,
   onToggleOpen,
   onToggleDone,
   onRename,
@@ -28,6 +28,7 @@ export default function TaskNode({
   const hasKids = node.children?.length > 0;
   const storedOpen = openById?.[node.id];
   const open = typeof storedOpen === "boolean" ? storedOpen : true;
+  const isCardVisible = !!cardVisibility?.[node.id];
 
   useEffect(() => {
     setAssignee(node.assignee ?? "");
@@ -81,7 +82,7 @@ export default function TaskNode({
     return "";
   };
 
-  const statusCard = showCards ? (
+  const statusCard = (
     <div style={styles.statusCard}>
       <span>Состояние</span>
       <span
@@ -93,7 +94,7 @@ export default function TaskNode({
         {node.done ? "Готово" : "В работе"}
       </span>
     </div>
-  ) : null;
+  );
 
   return (
     <div style={{ marginLeft: level * 14, padding: "4px 0" }}>
@@ -132,16 +133,14 @@ export default function TaskNode({
             U
           </button>
         ) : null}
-        {level === 0 ? (
-          <button
-            type="button"
-            style={styles.cardToggleBtn(showCards)}
-            onClick={onToggleCards}
-            title={showCards ? "Скрыть карточки задач" : "Показать карточки задач"}
-          >
-            C
-          </button>
-        ) : null}
+        <button
+          type="button"
+          style={styles.cardToggleBtn(isCardVisible)}
+          onClick={() => onToggleCard?.(node.id)}
+          title={isCardVisible ? "Скрыть карточку задачи" : "Показать карточку задачи"}
+        >
+          C
+        </button>
 
         {edit ? (
           <form
@@ -236,8 +235,8 @@ export default function TaskNode({
               openById={openById}
               showMeta={showMeta}
               onToggleMeta={onToggleMeta}
-              showCards={showCards}
-              onToggleCards={onToggleCards}
+              cardVisibility={cardVisibility}
+              onToggleCard={onToggleCard}
               onToggleOpen={onToggleOpen}
               onToggleDone={onToggleDone}
               onRename={onRename}

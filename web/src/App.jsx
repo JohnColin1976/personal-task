@@ -15,7 +15,7 @@ export default function App() {
   const [newDeadline, setNewDeadline] = useState("");
   const [tab, setTab] = useState("tasks");
   const [selectedTaskId, setSelectedTaskId] = useState(null);
-  const [showCards, setShowCards] = useState(true);
+  const [cardVisibility, setCardVisibility] = useState({});
 
   const isOperationalTree = (node) => {
     const firstWord = (node?.title || "").trim().split(/\s+/)[0] || "";
@@ -109,6 +109,18 @@ export default function App() {
       setTab("tasks");
     }
     setSelectedTaskId(id);
+  };
+
+  const handleToggleCard = (id) => {
+    setCardVisibility((prev) => {
+      const next = { ...prev };
+      if (next[id]) {
+        delete next[id];
+      } else {
+        next[id] = true;
+      }
+      return next;
+    });
   };
 
   function openGantt(node) {
@@ -281,24 +293,23 @@ export default function App() {
               onDelete={onDelete}
               onUpdateMeta={onUpdateMeta}
               onOpenGantt={openGantt}
-              showCards={showCards}
-              onToggleCards={() => setShowCards((prev) => !prev)}
+              cardVisibility={cardVisibility}
+              onToggleCard={handleToggleCard}
             />
           </div>
 
-          {showCards ? (
-            <div className="panel taskCardsPanel">
-              <div className="taskCardsHeader">
-                Карточки задач
-                <span className="taskCardsHint">Нажмите на событие в календаре, чтобы открыть карточку.</span>
-              </div>
-              <TaskCards
-                tree={visibleTree}
-                selectedTaskId={selectedTaskId}
-                onUpdateMeta={onUpdateMeta}
-              />
+          <div className="panel taskCardsPanel">
+            <div className="taskCardsHeader">
+              Карточки задач
+              <span className="taskCardsHint">Нажмите на событие в календаре, чтобы открыть карточку.</span>
             </div>
-          ) : null}
+            <TaskCards
+              tree={visibleTree}
+              selectedTaskId={selectedTaskId}
+              visibleCardIds={cardVisibility}
+              onUpdateMeta={onUpdateMeta}
+            />
+          </div>
 
           <div className="footer">
             Подсказка: двойной клик по задаче — переименование.
