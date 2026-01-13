@@ -59,7 +59,7 @@ const addDays = (date, offset) => {
   return new Date(next.getFullYear(), next.getMonth(), next.getDate());
 };
 
-export default function Calendar({ tree }) {
+export default function Calendar({ tree, onSelectTask }) {
   const [monthDate, setMonthDate] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -212,7 +212,23 @@ export default function Calendar({ tree }) {
                         <div className="calendarDayNumber">{day.getDate()}</div>
                         <div className="calendarEvents">
                           {events.slice(0, view === "week" ? 2 : 3).map((task) => (
-                            <span key={task.id} className="calendarEvent">
+                            <span
+                              key={task.id}
+                              className="calendarEvent calendarEventLink"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                onSelectTask?.(task.id);
+                              }}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  onSelectTask?.(task.id);
+                                }
+                              }}
+                            >
                               {task.title}
                             </span>
                           ))}
@@ -239,12 +255,16 @@ export default function Calendar({ tree }) {
                   {selectedEvents.map((task) => (
                     <li key={task.id} className="calendarListItem">
                       <span className={`calendarListDot ${task.done ? "calendarListDone" : ""}`} />
-                      <div>
+                      <button
+                        type="button"
+                        className="calendarTaskLink"
+                        onClick={() => onSelectTask?.(task.id)}
+                      >
                         <div className="calendarListTitle">{task.title}</div>
                         {task.assignee && (
                           <div className="calendarListMeta">{task.assignee}</div>
                         )}
-                      </div>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -269,12 +289,16 @@ export default function Calendar({ tree }) {
                 {selectedEvents.map((task) => (
                   <li key={task.id} className="calendarListItem">
                     <span className={`calendarListDot ${task.done ? "calendarListDone" : ""}`} />
-                    <div>
+                    <button
+                      type="button"
+                      className="calendarTaskLink"
+                      onClick={() => onSelectTask?.(task.id)}
+                    >
                       <div className="calendarListTitle">{task.title}</div>
                       {task.assignee && (
                         <div className="calendarListMeta">{task.assignee}</div>
                       )}
-                    </div>
+                    </button>
                   </li>
                 ))}
               </ul>
