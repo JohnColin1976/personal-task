@@ -22,7 +22,7 @@ const saveButtonLabel = (status) => {
   return "";
 };
 
-function TaskCard({ node, selected, onUpdateMeta }) {
+function TaskCard({ node, selected, onUpdateMeta, onToggleCard }) {
   const [title, setTitle] = useState(node.title);
   const [assignee, setAssignee] = useState(node.assignee ?? "");
   const [deadline, setDeadline] = useState(node.deadline ?? "");
@@ -125,9 +125,19 @@ function TaskCard({ node, selected, onUpdateMeta }) {
             {node.level > 0 ? `Подзадача • уровень ${node.level}` : "Главная задача"}
           </div>
         </div>
-        <span className={`taskCardStatus ${node.done ? "taskCardStatusDone" : ""}`}>
-          {node.done ? "Готово" : "В работе"}
-        </span>
+        <div className="taskCardActions">
+          <button
+            type="button"
+            className="taskCardToggle"
+            onClick={() => onToggleCard?.(node.id, { source: "card" })}
+            title="Скрыть карточку и вернуться к задаче"
+          >
+            C
+          </button>
+          <span className={`taskCardStatus ${node.done ? "taskCardStatusDone" : ""}`}>
+            {node.done ? "Готово" : "В работе"}
+          </span>
+        </div>
       </div>
 
       <div className="taskCardFields">
@@ -239,7 +249,13 @@ function TaskCard({ node, selected, onUpdateMeta }) {
   );
 }
 
-export default function TaskCards({ tree, selectedTaskId, visibleCardIds, onUpdateMeta }) {
+export default function TaskCards({
+  tree,
+  selectedTaskId,
+  visibleCardIds,
+  onUpdateMeta,
+  onToggleCard
+}) {
   const cards = useMemo(() => {
     const flattened = flattenTree(tree);
     if (!visibleCardIds || typeof visibleCardIds !== "object") return [];
@@ -252,7 +268,7 @@ export default function TaskCards({ tree, selectedTaskId, visibleCardIds, onUpda
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }, [selectedTaskId]);
+  }, [selectedTaskId, visibleCardIds]);
 
   if (!cards.length) {
     return <div className="taskCardsEmpty">Нет задач для карточек.</div>;
@@ -266,6 +282,7 @@ export default function TaskCards({ tree, selectedTaskId, visibleCardIds, onUpda
           node={node}
           selected={node.id === selectedTaskId}
           onUpdateMeta={onUpdateMeta}
+          onToggleCard={onToggleCard}
         />
       ))}
     </div>

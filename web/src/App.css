@@ -391,6 +391,23 @@
   gap: 12px;
 }
 
+.taskCardActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.taskCardToggle {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  border: 1px solid #4f7cff;
+  background: #f3f6ff;
+  cursor: pointer;
+  font-weight: 600;
+  color: #2b3f7c;
+}
+
 .taskCardTitle {
   font-size: 16px;
   font-weight: 600;

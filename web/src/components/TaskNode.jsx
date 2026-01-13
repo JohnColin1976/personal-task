@@ -97,7 +97,10 @@ export default function TaskNode({
   );
 
   return (
-    <div style={{ marginLeft: level * 14, padding: "4px 0" }}>
+    <div
+      id={`task-node-${node.id}`}
+      style={{ marginLeft: level * 14, padding: "4px 0" }}
+    >
       <div style={styles.row}>
         <button
           style={styles.disclosure}
@@ -136,8 +139,8 @@ export default function TaskNode({
         <button
           type="button"
           style={styles.cardToggleBtn(isCardVisible)}
-          onClick={() => onToggleCard?.(node.id)}
-          title={isCardVisible ? "Скрыть карточку задачи" : "Показать карточку задачи"}
+          onClick={() => onToggleCard?.(node.id, { source: "list" })}
+          title={isCardVisible ? "Перейти к карточке задачи" : "Показать карточку задачи"}
         >
           C
         </button>
