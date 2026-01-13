@@ -239,8 +239,12 @@ function TaskCard({ node, selected, onUpdateMeta }) {
   );
 }
 
-export default function TaskCards({ tree, selectedTaskId, onUpdateMeta }) {
-  const cards = useMemo(() => flattenTree(tree), [tree]);
+export default function TaskCards({ tree, selectedTaskId, visibleCardIds, onUpdateMeta }) {
+  const cards = useMemo(() => {
+    const flattened = flattenTree(tree);
+    if (!visibleCardIds || typeof visibleCardIds !== "object") return [];
+    return flattened.filter((node) => visibleCardIds[node.id]);
+  }, [tree, visibleCardIds]);
 
   useEffect(() => {
     if (!selectedTaskId) return;
