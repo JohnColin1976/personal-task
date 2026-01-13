@@ -3,6 +3,7 @@ import { apiDelete, apiGet, apiPatch, apiPost } from "./api.js";
 import Login from "./components/Login.jsx";
 import TaskTree from "./components/TaskTree.jsx";
 import Wiki from "./components/Wiki.jsx";
+import Calendar from "./components/Calendar.jsx";
 import "./App.css";
 
 export default function App() {
@@ -186,6 +187,10 @@ export default function App() {
     setAuth(false);
   }
 
+  const isTaskTab = tab === "tasks" || tab === "operational";
+  const isWikiTab = tab === "wiki";
+  const isCalendarTab = tab === "calendar";
+
   return (
     <div className="page">
       <div className="header">
@@ -209,11 +214,17 @@ export default function App() {
           >
             Wiki
           </button>
+          <button
+            className={`tab ${tab === "calendar" ? "tabActive" : ""}`}
+            onClick={() => setTab("calendar")}
+          >
+            Календарь
+          </button>
         </div>
         <button className="logout" onClick={logout}>Выйти</button>
       </div>
 
-      {(tab === "tasks" || tab === "operational") ? (
+      {isTaskTab ? (
         <>
           <form onSubmit={addRoot} className="addRow">
             <input
@@ -253,8 +264,12 @@ export default function App() {
             Подсказка: двойной клик по задаче — переименование.
           </div>
         </>
-      ) : (
+      ) : isWikiTab ? (
         <Wiki />
+      ) : isCalendarTab ? (
+        <Calendar tree={tree} />
+      ) : (
+        <div className="panel">Выберите раздел в меню.</div>
       )}
     </div>
   );
