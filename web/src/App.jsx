@@ -111,7 +111,41 @@ export default function App() {
     setSelectedTaskId(id);
   };
 
-  const handleToggleCard = (id) => {
+  const scrollToTaskCard = (id) => {
+    const element = document.getElementById(`task-card-${id}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  const scrollToTaskNode = (id) => {
+    const element = document.getElementById(`task-node-${id}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  const handleToggleCard = (id, options = {}) => {
+    const source = options?.source;
+    const isVisible = !!cardVisibility?.[id];
+
+    if (source === "list") {
+      setCardVisibility((prev) => ({ ...prev, [id]: true }));
+      setSelectedTaskId(id);
+      setTimeout(() => scrollToTaskCard(id), 0);
+      return;
+    }
+
+    if (source === "card" && isVisible) {
+      setCardVisibility((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      scrollToTaskNode(id);
+      return;
+    }
+
     setCardVisibility((prev) => {
       const next = { ...prev };
       if (next[id]) {
@@ -308,6 +342,7 @@ export default function App() {
               selectedTaskId={selectedTaskId}
               visibleCardIds={cardVisibility}
               onUpdateMeta={onUpdateMeta}
+              onToggleCard={handleToggleCard}
             />
           </div>
 
