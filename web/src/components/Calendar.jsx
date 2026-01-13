@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 const weekDays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
@@ -46,12 +46,26 @@ const buildCalendarDays = (monthDate) => {
   return days;
 };
 
+const startOfWeek = (date) => {
+  const dayIndex = (date.getDay() + 6) % 7;
+  const start = new Date(date);
+  start.setDate(date.getDate() - dayIndex);
+  return new Date(start.getFullYear(), start.getMonth(), start.getDate());
+};
+
+const addDays = (date, offset) => {
+  const next = new Date(date);
+  next.setDate(date.getDate() + offset);
+  return new Date(next.getFullYear(), next.getMonth(), next.getDate());
+};
+
 export default function Calendar({ tree }) {
   const [monthDate, setMonthDate] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const [view, setView] = useState("month");
 
   const tasks = useMemo(() => flattenTasks(tree), [tree]);
 
@@ -69,17 +83,49 @@ export default function Calendar({ tree }) {
   }, [tasks]);
 
   const days = useMemo(() => buildCalendarDays(monthDate), [monthDate]);
+  const weekDates = useMemo(() => {
+    const start = startOfWeek(selectedDate);
+    return Array.from({ length: 7 }, (_, index) => addDays(start, index));
+  }, [selectedDate]);
 
   const monthLabel = monthDate.toLocaleDateString("ru-RU", {
     month: "long",
     year: "numeric"
   });
+  const weekLabel = `${weekDates[0].toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "long"
+  })} — ${weekDates[6].toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  })}`;
+  const dayLabel = selectedDate.toLocaleDateString("ru-RU", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
+  const headerLabel = view === "month" ? monthLabel : view === "week" ? weekLabel : dayLabel;
 
   const selectedKey = toISODate(selectedDate);
   const selectedEvents = eventsByDate.get(selectedKey) || [];
 
   const changeMonth = (offset) => {
-    setMonthDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + offset, 1));
+    setMonthDate((prev) => {
+      const next = new Date(prev.getFullYear(), prev.getMonth() + offset, 1);
+      setSelectedDate(new Date(next.getFullYear(), next.getMonth(), 1));
+      return next;
+    });
+  };
+
+  const handleNavigate = (offset) => {
+    if (view === "month") {
+      changeMonth(offset);
+      return;
+    }
+    const step = view === "week" ? 7 : 1;
+    setSelectedDate((prev) => addDays(prev, offset * step));
   };
 
   const goToday = () => {
@@ -88,64 +134,123 @@ export default function Calendar({ tree }) {
     setSelectedDate(today);
   };
 
+  const handleViewChange = (nextView) => {
+    setView(nextView);
+    if (nextView === "month") {
+      setMonthDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
+    }
+  };
+
+  useEffect(() => {
+    if (view !== "month") {
+      setMonthDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
+    }
+  }, [selectedDate, view]);
+
   return (
     <div className="calendar">
       <div className="calendarTop">
         <div className="calendarTitle">Календарь</div>
         <div className="calendarControls">
-          <button type="button" onClick={() => changeMonth(-1)} className="calendarButton">
+          <button type="button" onClick={() => handleNavigate(-1)} className="calendarButton">
             ◀
           </button>
           <button type="button" onClick={goToday} className="calendarButton calendarButtonPrimary">
             Сегодня
           </button>
-          <button type="button" onClick={() => changeMonth(1)} className="calendarButton">
+          <button type="button" onClick={() => handleNavigate(1)} className="calendarButton">
             ▶
           </button>
         </div>
-        <div className="calendarMonth">{monthLabel}</div>
+        <div className="calendarViewToggle">
+          {[
+            { id: "month", label: "Месяц" },
+            { id: "week", label: "Неделя" },
+            { id: "day", label: "День" }
+          ].map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => handleViewChange(option.id)}
+              className={`calendarViewButton ${view === option.id ? "calendarViewButtonActive" : ""}`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <div className="calendarMonth">{headerLabel}</div>
       </div>
 
       <div className="calendarLayout">
-        <div className="calendarGrid">
-          {weekDays.map((day) => (
-            <div key={day} className="calendarWeekDay">
-              {day}
+        <div className="calendarMain">
+          {(view === "month" || view === "week") && (
+            <div className="calendarGrid">
+              {weekDays.map((day) => (
+                <div key={day} className="calendarWeekDay">
+                  {day}
+                </div>
+              ))}
+              {(view === "month" ? days : weekDates).map((day, index) => {
+                const key = day ? toISODate(day) : `empty-${index}`;
+                const events = day ? eventsByDate.get(toISODate(day)) || [] : [];
+                const isToday = day && toISODate(day) === toISODate(new Date());
+                const isSelected = day && toISODate(day) === selectedKey;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`calendarDay ${view === "week" ? "calendarDayCompact" : ""} ${
+                      day ? "" : "calendarDayEmpty"
+                    } ${isToday ? "calendarDayToday" : ""} ${
+                      isSelected ? "calendarDaySelected" : ""
+                    }`}
+                    onClick={() => day && setSelectedDate(day)}
+                    disabled={!day}
+                  >
+                    {day && (
+                      <>
+                        <div className="calendarDayNumber">{day.getDate()}</div>
+                        <div className="calendarEvents">
+                          {events.slice(0, view === "week" ? 2 : 3).map((task) => (
+                            <span key={task.id} className="calendarEvent">
+                              {task.title}
+                            </span>
+                          ))}
+                          {events.length > (view === "week" ? 2 : 3) && (
+                            <span className="calendarEventMore">
+                              +{events.length - (view === "week" ? 2 : 3)} ещё
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </button>
+                );
+              })}
             </div>
-          ))}
-          {days.map((day, index) => {
-            const key = day ? toISODate(day) : `empty-${index}`;
-            const events = day ? eventsByDate.get(toISODate(day)) || [] : [];
-            const isToday = day && toISODate(day) === toISODate(new Date());
-            const isSelected = day && toISODate(day) === selectedKey;
-            return (
-              <button
-                key={key}
-                type="button"
-                className={`calendarDay ${day ? "" : "calendarDayEmpty"} ${
-                  isToday ? "calendarDayToday" : ""
-                } ${isSelected ? "calendarDaySelected" : ""}`}
-                onClick={() => day && setSelectedDate(day)}
-                disabled={!day}
-              >
-                {day && (
-                  <>
-                    <div className="calendarDayNumber">{day.getDate()}</div>
-                    <div className="calendarEvents">
-                      {events.slice(0, 3).map((task) => (
-                        <span key={task.id} className="calendarEvent">
-                          {task.title}
-                        </span>
-                      ))}
-                      {events.length > 3 && (
-                        <span className="calendarEventMore">+{events.length - 3} ещё</span>
-                      )}
-                    </div>
-                  </>
-                )}
-              </button>
-            );
-          })}
+          )}
+          {view === "day" && (
+            <div className="calendarDayView">
+              <div className="calendarDayViewHeader">{dayLabel}</div>
+              {selectedEvents.length === 0 ? (
+                <div className="calendarEmpty">Нет задач со сроком на этот день.</div>
+              ) : (
+                <ul className="calendarList">
+                  {selectedEvents.map((task) => (
+                    <li key={task.id} className="calendarListItem">
+                      <span className={`calendarListDot ${task.done ? "calendarListDone" : ""}`} />
+                      <div>
+                        <div className="calendarListTitle">{task.title}</div>
+                        {task.assignee && (
+                          <div className="calendarListMeta">{task.assignee}</div>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
 
         <aside className="calendarSidebar">
