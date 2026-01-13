@@ -13,6 +13,17 @@ export default function App() {
   const [newDeadline, setNewDeadline] = useState("");
   const [tab, setTab] = useState("tasks");
 
+  const isOperationalTree = (node) => {
+    const firstWord = (node?.title || "").trim().split(/\s+/)[0] || "";
+    return firstWord === "ОПЕРАТИВНЫЕ";
+  };
+
+  const visibleTree = tree.filter((node) => {
+    if (tab === "operational") return isOperationalTree(node);
+    if (tab === "tasks") return !isOperationalTree(node);
+    return true;
+  });
+
   async function refresh() {
     const res = await apiGet("/api/tasks");
     if (res?.tree) setTree(res.tree);
@@ -187,6 +198,12 @@ export default function App() {
             Список
           </button>
           <button
+            className={`tab ${tab === "operational" ? "tabActive" : ""}`}
+            onClick={() => setTab("operational")}
+          >
+            ОПЕРАТИВНЫЕ
+          </button>
+          <button
             className={`tab ${tab === "wiki" ? "tabActive" : ""}`}
             onClick={() => setTab("wiki")}
           >
@@ -196,7 +213,7 @@ export default function App() {
         <button className="logout" onClick={logout}>Выйти</button>
       </div>
 
-      {tab === "tasks" ? (
+      {(tab === "tasks" || tab === "operational") ? (
         <>
           <form onSubmit={addRoot} className="addRow">
             <input
@@ -222,7 +239,7 @@ export default function App() {
 
           <div className="panel">
             <TaskTree
-              tree={tree}
+              tree={visibleTree}
               onToggleDone={onToggleDone}
               onRename={onRename}
               onAddChild={onAddChild}
