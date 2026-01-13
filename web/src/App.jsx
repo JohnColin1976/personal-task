@@ -16,13 +16,27 @@ export default function App() {
   const [tab, setTab] = useState("tasks");
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [cardVisibility, setCardVisibility] = useState({});
+  const [showSettings, setShowSettings] = useState(true);
+  const [hideCompleted, setHideCompleted] = useState(false);
 
   const isOperationalTree = (node) => {
     const firstWord = (node?.title || "").trim().split(/\s+/)[0] || "";
     return firstWord === "ОПЕРАТИВНЫЕ";
   };
 
-  const visibleTree = tree.filter((node) => {
+  const filterCompletedTasks = (nodes) => {
+    if (!hideCompleted) return nodes;
+    return (nodes || []).reduce((acc, node) => {
+      if (node.done) return acc;
+      const children = filterCompletedTasks(node.children || []);
+      acc.push({ ...node, children });
+      return acc;
+    }, []);
+  };
+
+  const treeForDisplay = filterCompletedTasks(tree);
+
+  const visibleTree = treeForDisplay.filter((node) => {
     if (tab === "operational") return isOperationalTree(node);
     if (tab === "tasks") return !isOperationalTree(node);
     return true;
@@ -291,72 +305,97 @@ export default function App() {
             Календарь
           </button>
         </div>
-        <button className="logout" onClick={logout}>Выйти</button>
+        <div className="headerActions">
+          <button
+            className="settingsToggleBtn"
+            onClick={() => setShowSettings((prev) => !prev)}
+          >
+            {showSettings ? "Скрыть настройки" : "Показать настройки"}
+          </button>
+          <button className="logout" onClick={logout}>Выйти</button>
+        </div>
       </div>
 
-      {isTaskTab ? (
-        <>
-          <form onSubmit={addRoot} className="addRow">
-            <input
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Новая задача…"
-              className="input"
-            />
-            <input
-              value={newAssignee}
-              onChange={(e) => setNewAssignee(e.target.value)}
-              placeholder="Исполнитель"
-              className="input inputSmall"
-            />
-            <input
-              type="date"
-              value={newDeadline}
-              onChange={(e) => setNewDeadline(e.target.value)}
-              className="input inputSmall"
-            />
-            <button className="addBtn" type="submit">Добавить</button>
-          </form>
+      <div className="pageLayout">
+        <div className="mainContent">
+          {isTaskTab ? (
+            <>
+              <form onSubmit={addRoot} className="addRow">
+                <input
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="Новая задача…"
+                  className="input"
+                />
+                <input
+                  value={newAssignee}
+                  onChange={(e) => setNewAssignee(e.target.value)}
+                  placeholder="Исполнитель"
+                  className="input inputSmall"
+                />
+                <input
+                  type="date"
+                  value={newDeadline}
+                  onChange={(e) => setNewDeadline(e.target.value)}
+                  className="input inputSmall"
+                />
+                <button className="addBtn" type="submit">Добавить</button>
+              </form>
 
-          <div className="panel">
-            <TaskTree
-              tree={visibleTree}
-              onToggleDone={onToggleDone}
-              onRename={onRename}
-              onAddChild={onAddChild}
-              onDelete={onDelete}
-              onUpdateMeta={onUpdateMeta}
-              onOpenGantt={openGantt}
-              cardVisibility={cardVisibility}
-              onToggleCard={handleToggleCard}
-            />
-          </div>
+              <div className="panel">
+                <TaskTree
+                  tree={visibleTree}
+                  onToggleDone={onToggleDone}
+                  onRename={onRename}
+                  onAddChild={onAddChild}
+                  onDelete={onDelete}
+                  onUpdateMeta={onUpdateMeta}
+                  onOpenGantt={openGantt}
+                  cardVisibility={cardVisibility}
+                  onToggleCard={handleToggleCard}
+                />
+              </div>
 
-          <div className="panel taskCardsPanel">
-            <div className="taskCardsHeader">
-              Карточки задач
-              <span className="taskCardsHint">Нажмите на событие в календаре, чтобы открыть карточку.</span>
-            </div>
-            <TaskCards
-              tree={visibleTree}
-              selectedTaskId={selectedTaskId}
-              visibleCardIds={cardVisibility}
-              onUpdateMeta={onUpdateMeta}
-              onToggleCard={handleToggleCard}
-            />
-          </div>
+              <div className="panel taskCardsPanel">
+                <div className="taskCardsHeader">
+                  Карточки задач
+                  <span className="taskCardsHint">Нажмите на событие в календаре, чтобы открыть карточку.</span>
+                </div>
+                <TaskCards
+                  tree={visibleTree}
+                  selectedTaskId={selectedTaskId}
+                  visibleCardIds={cardVisibility}
+                  onUpdateMeta={onUpdateMeta}
+                  onToggleCard={handleToggleCard}
+                />
+              </div>
 
-          <div className="footer">
-            Подсказка: двойной клик по задаче — переименование.
-          </div>
-        </>
-      ) : isWikiTab ? (
-        <Wiki />
-      ) : isCalendarTab ? (
-        <Calendar tree={tree} onSelectTask={handleSelectTask} />
-      ) : (
-        <div className="panel">Выберите раздел в меню.</div>
-      )}
+              <div className="footer">
+                Подсказка: двойной клик по задаче — переименование.
+              </div>
+            </>
+          ) : isWikiTab ? (
+            <Wiki />
+          ) : isCalendarTab ? (
+            <Calendar tree={treeForDisplay} onSelectTask={handleSelectTask} />
+          ) : (
+            <div className="panel">Выберите раздел в меню.</div>
+          )}
+        </div>
+        {showSettings ? (
+          <aside className="settingsPanel">
+            <div className="settingsHeader">Настройки</div>
+            <label className="settingsOption">
+              <input
+                type="checkbox"
+                checked={hideCompleted}
+                onChange={(event) => setHideCompleted(event.target.checked)}
+              />
+              <span>Скрывать выполненные</span>
+            </label>
+          </aside>
+        ) : null}
+      </div>
     </div>
   );
 }
